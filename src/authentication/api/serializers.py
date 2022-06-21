@@ -1,3 +1,4 @@
+import email
 from rest_framework import serializers
 
 from ..models import CustomUser
@@ -6,7 +7,7 @@ from ..models import CustomUser
 class CustomUserSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True)
     username = serializers.CharField(required=True)
-    password = serializers.CharField(min_length=8, write_only=True)
+    password = serializers.CharField(min_length=5, write_only=True)
     is_superuser = serializers.BooleanField(read_only=True)
     is_active = serializers.BooleanField(read_only=True)
     first_name = serializers.CharField(read_only=True)
@@ -26,3 +27,15 @@ class CustomUserSerializer(serializers.ModelSerializer):
         # instance.is_active = False
         instance.save()
         return instance
+
+    def validate_username(self, value):
+        user = CustomUser.objects.filter(username=value).first()
+        if user:
+            raise serializers.ValidationError("Username already exists")
+        return value
+
+    def validate_email(self, value):
+        user = CustomUser.objects.filter(email=value).first()
+        if user:
+            raise serializers.ValidationError("Email already exists")
+        return value
