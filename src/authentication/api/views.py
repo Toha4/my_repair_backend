@@ -28,7 +28,7 @@ class UserDetailView(APIView):
 class CustomUserCreateView(APIView):
     permission_classes = (AllowAny,)
 
-    # TODO R-3: При регистрации сделать is_active = False и активировать с помощью письма на email
+    # TODO R-9: При регистрации сделать is_active = False и активировать с помощью письма на email
 
     def post(self, request, *args, **kwargs):
         serializer = CustomUserSerializer(data=request.data)
@@ -59,7 +59,7 @@ class LoginView(jwt_views.TokenViewBase):
             key=settings.SIMPLE_JWT["REFRESH_COOKIE_NAME"],
             value=refresh_token,
             httponly=True,
-            path="/api/authorization",
+            path="/",
             max_age=settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds(),
         )
         return response
@@ -69,9 +69,8 @@ class RefreshView(jwt_views.TokenViewBase):
     serializer_class = TokenRefreshSerializer
 
     def post(self, request, *args, **kwargs):
-        data = request.data
-        data["refresh"] = self.request.COOKIES.get(settings.SIMPLE_JWT["REFRESH_COOKIE_NAME"])
-        serializer = self.get_serializer(data=data)
+        refresh = self.request.COOKIES.get(settings.SIMPLE_JWT["REFRESH_COOKIE_NAME"])
+        serializer = self.get_serializer(data={"refresh": refresh})
 
         try:
             serializer.is_valid(raise_exception=True)
@@ -86,7 +85,7 @@ class RefreshView(jwt_views.TokenViewBase):
             key=settings.SIMPLE_JWT["REFRESH_COOKIE_NAME"],
             value=refresh_token,
             httponly=True,
-            path="/api/authorization",
+            path="/",
             max_age=settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds(),
         )
         return response
@@ -103,6 +102,7 @@ class LogOutView(APIView):
         2. Использовать короткий срок жизни access токена (например, 5 мин) что снизит риск.
         3. Использовать Redis и хранить blacklist там.
     """
+    permission_classes = (AllowAny,)
 
     def post(self, request, *args, **kwargs):
         try:
