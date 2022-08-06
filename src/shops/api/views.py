@@ -7,7 +7,7 @@ from rest_framework.mixins import ListModelMixin
 from rest_framework.mixins import RetrieveModelMixin
 from rest_framework.mixins import UpdateModelMixin
 
-from app.helpers.utils import get_queryset_data_user
+from app.helpers.utils import get_queryset_by_user
 from app.permissions import UserObjectsPermissions
 
 from ..models import Shop
@@ -21,7 +21,7 @@ class ShopListView(ListModelMixin, CreateModelMixin, GenericAPIView):
     pagination_class = None
 
     def get_queryset(self):
-        queryset = get_queryset_data_user(Shop, self.request)
+        queryset = get_queryset_by_user(Shop, self.request)
         return queryset
 
     def get(self, request, *args, **kwargs):

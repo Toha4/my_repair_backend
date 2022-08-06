@@ -3,6 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.utils.translation import gettext_lazy as _
 
 from .models import CustomUser
+from .models import UserSettings
 
 
 class CustomUserAdmin(UserAdmin):
@@ -25,4 +26,10 @@ class CustomUserAdmin(UserAdmin):
     )
 
 
+class UserSettingsAdmin(admin.ModelAdmin):
+    list_display = ("user",)
+    search_fields = ("user__username",)
+
+
 admin.site.register(CustomUser, CustomUserAdmin)
+admin.site.register(UserSettings, UserSettingsAdmin)

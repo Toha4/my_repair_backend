@@ -8,3 +8,22 @@ class CustomUser(AbstractUser):
     class Meta:
         verbose_name = "Пользователь"
         verbose_name_plural = "Пользователи"
+
+
+class UserSettings(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="settings")
+    current_home = models.ForeignKey(
+        "homes.home",
+        verbose_name="Текущий дом",
+        on_delete=models.PROTECT,
+        related_name="settings",
+        blank=True,
+        null=True,
+    )
+
+    def __str__(self) -> str:
+        return self.user.username
+
+    class Meta:
+        verbose_name = "Настройки пользователя"
+        verbose_name_plural = "Настройки пользователя"

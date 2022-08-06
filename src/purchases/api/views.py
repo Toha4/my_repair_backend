@@ -8,7 +8,7 @@ from rest_framework.mixins import RetrieveModelMixin
 from rest_framework.mixins import UpdateModelMixin
 
 from app.helpers.database import get_period_filter_lookup
-from app.helpers.utils import get_queryset_data_user
+from app.helpers.utils import get_queryset_by_user
 from app.permissions import UserObjectsPermissions
 
 from ..models import CashСheck
@@ -27,7 +27,7 @@ class CashСheckListView(ListModelMixin, CreateModelMixin, GenericAPIView):
         return CashСheckSerializer
 
     def get_queryset(self):
-        queryset = get_queryset_data_user(CashСheck, self.request)
+        queryset = get_queryset_by_user(CashСheck, self.request)
 
         home = self.request.query_params.get("home")
         if home:
@@ -96,7 +96,7 @@ class PositionListView(ListModelMixin, GenericAPIView):
     serializer_class = PositionListSerializer
 
     def get_queryset(self):
-        queryset = get_queryset_data_user(Position, self.request)
+        queryset = get_queryset_by_user(Position, self.request)
 
         home = self.request.query_params.get("home")
         if home:

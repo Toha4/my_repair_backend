@@ -22,6 +22,12 @@ class Home(models.Model):
         unique_together = ("name", "user")
         ordering = ("name", "-pk")
 
+    @property
+    def type_home_name(self):
+        if self.type_home:
+            return dict((x, y) for x, y in self.TYPE_HOME).get(self.type_home)
+        return ""
+
 
 class Room(models.Model):
     user = models.ForeignKey(
@@ -41,3 +47,7 @@ class Room(models.Model):
         verbose_name_plural = "Комнаты"
         unique_together = ("name", "user", "home")
         ordering = ("name", "-pk")
+
+    def save(self, *args, **kwargs):
+        self.home = self.user.settings.current_home
+        super(Room, self).save(*args, **kwargs)

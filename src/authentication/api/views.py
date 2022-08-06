@@ -5,6 +5,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.mixins import UpdateModelMixin
 from rest_framework_simplejwt import views as jwt_views
 from rest_framework_simplejwt.exceptions import InvalidToken
 from rest_framework_simplejwt.exceptions import TokenError
@@ -17,16 +18,27 @@ from authentication.utils import get_current_user
 from .serializers import CustomUserSerializer
 
 
-class UserDetailView(APIView):
+class UserDetailView(UpdateModelMixin, APIView):
     permission_classes = (IsAuthenticated,)
+    serializer_class = CustomUserSerializer
 
     def get(self, request, *args, **kwargs):
         user = get_current_user(request)
         return Response(CustomUserSerializer(instance=user).data, status=status.HTTP_200_OK)
 
+    def put(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        serializer = self.serializer_class(request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class CustomUserCreateView(APIView):
     permission_classes = (AllowAny,)
+    authentication_classes = []
 
     # TODO R-9: При регистрации сделать is_active = False и активировать с помощью письма на email
 

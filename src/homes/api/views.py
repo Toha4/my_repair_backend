@@ -1,14 +1,22 @@
 from django.shortcuts import get_object_or_404
 
+from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.mixins import CreateModelMixin
 from rest_framework.mixins import DestroyModelMixin
 from rest_framework.mixins import ListModelMixin
 from rest_framework.mixins import RetrieveModelMixin
 from rest_framework.mixins import UpdateModelMixin
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from app.helpers.utils import get_queryset_data_user
+from app.helpers.utils import get_queryset_by_user
+from app.helpers.utils import get_queryset_by_user_current_home
 from app.permissions import UserObjectsPermissions
+from authentication.api.serializers import UserSettingsSerializer
+from authentication.models import UserSettings
+from authentication.utils import get_current_user
 
 from ..models import Home
 from ..models import Room
@@ -23,7 +31,7 @@ class HomeListView(ListModelMixin, CreateModelMixin, GenericAPIView):
     pagination_class = None
 
     def get_queryset(self):
-        queryset = get_queryset_data_user(Home, self.request)
+        queryset = get_queryset_by_user(Home, self.request)
         return queryset
 
     def get(self, request, *args, **kwargs):
@@ -64,7 +72,7 @@ class RoomListView(ListModelMixin, CreateModelMixin, GenericAPIView):
     pagination_class = None
 
     def get_queryset(self):
-        queryset = get_queryset_data_user(Room, self.request)
+        queryset = get_queryset_by_user_current_home(Room, self.request)
         return queryset
 
     def get(self, request, *args, **kwargs):
@@ -96,3 +104,26 @@ class RoomDetailView(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, Ge
 
     def delete(self, request, *args, **kwargs):
         return self.destroy(request, *args, **kwargs)
+
+
+class SetCurrentHomeView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        current_home = request.data.get("current_home", False)
+        home = Home.objects.get(pk=current_home)
+
+        if home:
+            user = get_current_user(request)
+
+            if user == home.user:
+                user_settings = UserSettings.objects.filter(user=user).first()
+                if not user_settings:
+                    user_settings = UserSettings(user=user)
+
+                user_settings.current_home = home
+                user_settings.save()
+
+                return Response(UserSettingsSerializer(instance=user_settings).data, status=status.HTTP_200_OK)
+
+        return Response({}, status=status.HTTP_400_BAD_REQUEST)
