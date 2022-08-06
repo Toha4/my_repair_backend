@@ -6,3 +6,6 @@ class HomesConfig(AppConfig):
     name = "homes"
     verbose_name = "Дом"
     verbose_name_plural = "Дома"
+
+    def ready(self):
+        from homes import receivers

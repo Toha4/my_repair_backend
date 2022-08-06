@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from app.serializers import SERIALIZER_DATE_PARAMS
 from app.serializers import CurrentUserDefault
 
 from ..models import Home
@@ -8,6 +9,7 @@ from ..models import Room
 
 class HomeSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=CurrentUserDefault())
+    type_home_name = serializers.ReadOnlyField(read_only=True)
 
     class Meta:
         model = Home
@@ -16,30 +18,23 @@ class HomeSerializer(serializers.ModelSerializer):
             "user",
             "name",
             "type_home",
+            "type_home_name",
             "square",
         )
 
 
 class RoomSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=CurrentUserDefault())
+    date_begin = serializers.DateField(**SERIALIZER_DATE_PARAMS, required=False, allow_null=True)
+    date_end = serializers.DateField(**SERIALIZER_DATE_PARAMS, required=False, allow_null=True)
 
     class Meta:
         model = Room
         fields = (
             "pk",
             "user",
-            "home",
             "name",
             "square",
             "date_begin",
             "date_end",
         )
-
-    def validate(self, data):
-        user = data.get("user")
-        home = data.get("home")
-
-        if home.user != user:
-            raise serializers.ValidationError({"home": ("Дом принадлежит другому пользователю.")})
-
-        return data
