@@ -4,9 +4,9 @@ SERIALIZER_DATE_PARAMS = dict(format="%d.%m.%Y", input_formats=["%d.%m.%Y", "iso
 
 
 class CurrentUserDefault(object):
-    def set_context(self, serializer_field):
-        request = serializer_field.context["request"]
-        self.user = get_current_user(request)
+    requires_context = True
 
-    def __call__(self):
-        return self.user
+    def __call__(self, serializer_instance=None):
+        request = serializer_instance.context["request"]
+        user = get_current_user(request)
+        return user
