@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import CashСheck
+from .models import CashCheck
 from .models import Position
 
 
@@ -14,5 +14,5 @@ class PositionAdmin(admin.ModelAdmin):
     search_fields = ("name", "cash_check__pk", "home__user__username")
 
 
-admin.site.register(CashСheck, CashСheckAdmin)
+admin.site.register(CashCheck, CashСheckAdmin)
 admin.site.register(Position, PositionAdmin)

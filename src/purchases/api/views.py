@@ -11,23 +11,23 @@ from app.helpers.database import get_period_filter_lookup
 from app.helpers.utils import get_queryset_by_user
 from app.permissions import UserObjectsPermissions
 
-from ..models import CashСheck
+from ..models import CashCheck
 from ..models import Position
-from .serializer import CashСheckFullSerializer
-from .serializer import CashСheckSerializer
+from .serializer import CashCheckFullSerializer
+from .serializer import CashCheckSerializer
 from .serializer import PositionListSerializer
 
 
-class CashСheckListView(ListModelMixin, CreateModelMixin, GenericAPIView):
+class CashCheckListView(ListModelMixin, CreateModelMixin, GenericAPIView):
     """Список чеков"""
 
     def get_serializer_class(self):
         if self.request.method == "GET":
-            return CashСheckFullSerializer
-        return CashСheckSerializer
+            return CashCheckFullSerializer
+        return CashCheckSerializer
 
     def get_queryset(self):
-        queryset = get_queryset_by_user(CashСheck, self.request)
+        queryset = get_queryset_by_user(CashCheck, self.request)
 
         home = self.request.query_params.get("home")
         if home:
@@ -66,12 +66,12 @@ class CashСheckListView(ListModelMixin, CreateModelMixin, GenericAPIView):
         return self.create(request, *args, **kwargs)
 
 
-class CashСheckDetailView(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, GenericAPIView):
+class CashCheckDetailView(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin, GenericAPIView):
     """Чек"""
 
     permission_classes = [UserObjectsPermissions]
-    queryset = CashСheck.objects.all()
-    serializer_class = CashСheckSerializer
+    queryset = CashCheck.objects.all()
+    serializer_class = CashCheckSerializer
 
     def get_object(self):
         pk = self.kwargs.pop("pk")

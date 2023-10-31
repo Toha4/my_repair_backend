@@ -5,7 +5,7 @@ class Shop(models.Model):
     user = models.ForeignKey(
         "authentication.CustomUser", verbose_name="Пользователь", on_delete=models.CASCADE, related_name="shops"
     )
-    name = models.CharField(verbose_name="Наименование", max_length=32)
+    name = models.CharField(verbose_name="Наименование", max_length=128)
     link = models.CharField(verbose_name="Ссылка на сайт", max_length=128, blank=True)
 
     def __str__(self) -> str:

@@ -1,7 +1,7 @@
 from django.db import models
 
 
-class CashСheck(models.Model):
+class CashCheck(models.Model):
     user = models.ForeignKey(
         "authentication.CustomUser", verbose_name="Пользователь", on_delete=models.CASCADE, related_name="cash_checks"
     )
@@ -27,7 +27,7 @@ class Position(models.Model):
         on_delete=models.CASCADE,
         related_name="cash_checks_positions",
     )
-    cash_check = models.ForeignKey(CashСheck, verbose_name="Чек", on_delete=models.CASCADE, related_name="positions")
+    cash_check = models.ForeignKey(CashCheck, verbose_name="Чек", on_delete=models.CASCADE, related_name="positions")
     name = models.CharField(verbose_name="Наименование", max_length=128)
     room = models.ForeignKey(
         "homes.Room", verbose_name="Комната", on_delete=models.PROTECT, related_name="cash_checks_positions"

@@ -5,13 +5,13 @@ from rest_framework import serializers
 from app.serializers import SERIALIZER_DATE_PARAMS
 from app.serializers import CurrentUserDefault
 
-from ..models import CashСheck
+from ..models import CashCheck
 from ..models import Position
 
 
 class PositionSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=CurrentUserDefault())
-    cahs_check = serializers.PrimaryKeyRelatedField(queryset=CashСheck.objects.all(), write_only=True, required=False)
+    cahs_check = serializers.PrimaryKeyRelatedField(queryset=CashCheck.objects.all(), write_only=True, required=False)
 
     class Meta:
         model = Position
@@ -73,13 +73,13 @@ class PositionListSerializer(PositionFullSerializer):
         return None
 
 
-class CashСheckSerializer(serializers.ModelSerializer):
+class CashCheckSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=CurrentUserDefault())
     date = serializers.DateField(**SERIALIZER_DATE_PARAMS)
     positions = PositionSerializer(many=True)
 
     class Meta:
-        model = CashСheck
+        model = CashCheck
         fields = (
             "pk",
             "user",
@@ -151,13 +151,13 @@ class CashСheckSerializer(serializers.ModelSerializer):
         return instance
 
 
-class CashСheckFullSerializer(CashСheckSerializer):
+class CashCheckFullSerializer(CashCheckSerializer):
     positions = PositionFullSerializer(many=True)
     home_name = serializers.SerializerMethodField()
     shop_name = serializers.SerializerMethodField()
 
-    class Meta(CashСheckSerializer.Meta):
-        fields = CashСheckSerializer.Meta.fields + ("home_name", "shop_name")
+    class Meta(CashCheckSerializer.Meta):
+        fields = CashCheckSerializer.Meta.fields + ("home_name", "shop_name")
 
     def get_home_name(self, obj):
         if obj.home:
