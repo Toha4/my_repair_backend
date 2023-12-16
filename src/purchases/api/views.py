@@ -29,9 +29,9 @@ class CashCheckListView(ListModelMixin, CreateModelMixin, GenericAPIView):
     def get_queryset(self):
         queryset = get_queryset_by_user(CashCheck, self.request)
 
-        home = self.request.query_params.get("home")
-        if home:
-            queryset = queryset.filter(home=home)
+        repair_object = self.request.query_params.get("repair_object")
+        if repair_object:
+            queryset = queryset.filter(repair_object=repair_object)
         else:
             queryset = queryset.none()
 
@@ -98,9 +98,9 @@ class PositionListView(ListModelMixin, GenericAPIView):
     def get_queryset(self):
         queryset = get_queryset_by_user(Position, self.request)
 
-        home = self.request.query_params.get("home")
-        if home:
-            queryset = queryset.filter(cash_check__home=home)
+        repair_object = self.request.query_params.get("repair_object")
+        if repair_object:
+            queryset = queryset.filter(cash_check__repair_object=repair_object)
         else:
             queryset = queryset.none()
 

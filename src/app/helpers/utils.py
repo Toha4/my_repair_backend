@@ -13,8 +13,8 @@ def get_queryset_by_user(model: Model, request: Request) -> QuerySet:
     return model.objects.none()
 
 
-def get_queryset_by_user_current_home(model: Model, request: Request) -> QuerySet:
+def get_queryset_by_user_current_repair_object(model: Model, request: Request) -> QuerySet:
     user = get_current_user(request)
-    if user and user.settings and user.settings.current_home is not None:
-        return model.objects.filter(user=user, home=user.settings.current_home)
+    if user and user.settings and user.settings.current_repair_object is not None:
+        return model.objects.filter(user=user, repair_object=user.settings.current_repair_object)
     return model.objects.none()
