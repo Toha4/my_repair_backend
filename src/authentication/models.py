@@ -12,9 +12,9 @@ class CustomUser(AbstractUser):
 
 class UserSettings(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="settings")
-    current_home = models.ForeignKey(
-        "homes.home",
-        verbose_name="Текущий дом",
+    current_repair_object = models.ForeignKey(
+        "homes.RepairObject",
+        verbose_name="Текущий объект ремонта",
         on_delete=models.PROTECT,
         related_name="settings",
         blank=True,

@@ -8,4 +8,4 @@ class HomesConfig(AppConfig):
     verbose_name_plural = "Дома"
 
     def ready(self):
-        from homes import receivers
+        from homes import receivers     # noqa

@@ -5,15 +5,21 @@ from ..models import UserSettings
 
 
 class UserSettingsSerializer(serializers.ModelSerializer):
-    current_home_name = serializers.SerializerMethodField()
+    current_repair_object_type = serializers.SerializerMethodField()
+    current_repair_object_name = serializers.SerializerMethodField()
 
     class Meta:
         model = UserSettings
-        fields = ("current_home", "current_home_name")
+        fields = ("current_repair_object", "current_repair_object_type", "current_repair_object_name")
 
-    def get_current_home_name(self, obj):
-        if obj.current_home:
-            return obj.current_home.name
+    def get_current_repair_object_type(self, obj):
+        if obj.current_repair_object:
+            return obj.current_repair_object.type_object
+        return None
+
+    def get_current_repair_object_name(self, obj):
+        if obj.current_repair_object:
+            return obj.current_repair_object.name
         return None
 
 
@@ -41,7 +47,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
         return instance
 
     def update(self, instance, validated_data):
-        password = validated_data.pop("password", None)
+        validated_data.pop("password", None)
 
         for (key, value) in validated_data.items():
             setattr(instance, key, value)

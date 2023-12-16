@@ -83,7 +83,7 @@ class CashCheckSerializer(serializers.ModelSerializer):
         fields = (
             "pk",
             "user",
-            "home",
+            "repair_object",
             "date",
             "shop",
             "positions",
@@ -92,15 +92,15 @@ class CashCheckSerializer(serializers.ModelSerializer):
     def validate(self, data):
         errors = {}
         positions = data.get("positions")
-        home = data.get("home")
+        repair_object = data.get("repair_object")
 
         if self.instance and self.instance.user:
             user = self.instance.user
         else:
             user = data.get("user")
 
-        if home.user != user:
-            errors["home"] = "Дом принадлежит другому пользователю."
+        if repair_object.user != user:
+            errors["repair_object"] = "Объект ремонта принадлежит другому пользователю."
 
         error_positions = []
         for position in positions:
@@ -153,15 +153,15 @@ class CashCheckSerializer(serializers.ModelSerializer):
 
 class CashCheckFullSerializer(CashCheckSerializer):
     positions = PositionFullSerializer(many=True)
-    home_name = serializers.SerializerMethodField()
+    repair_object_name = serializers.SerializerMethodField()
     shop_name = serializers.SerializerMethodField()
 
     class Meta(CashCheckSerializer.Meta):
-        fields = CashCheckSerializer.Meta.fields + ("home_name", "shop_name")
+        fields = CashCheckSerializer.Meta.fields + ("repair_object_name", "shop_name")
 
-    def get_home_name(self, obj):
-        if obj.home:
-            return obj.home.name
+    def get_repair_object_name(self, obj):
+        if obj.repair_object:
+            return obj.repair_object.name
         return ""
 
     def get_shop_name(self, obj):

@@ -5,7 +5,7 @@ class CashCheck(models.Model):
     user = models.ForeignKey(
         "authentication.CustomUser", verbose_name="Пользователь", on_delete=models.CASCADE, related_name="cash_checks"
     )
-    home = models.ForeignKey("homes.home", verbose_name="Дом", on_delete=models.PROTECT, related_name="cash_checks")
+    repair_object = models.ForeignKey("homes.RepairObject", verbose_name="Объект ремонта", on_delete=models.PROTECT, related_name="cash_checks")
     date = models.DateField("Дата")
     shop = models.ForeignKey(
         "shops.Shop", verbose_name="Магазин", on_delete=models.PROTECT, related_name="cash_checks"
