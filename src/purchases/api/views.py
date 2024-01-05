@@ -10,6 +10,7 @@ from rest_framework.mixins import UpdateModelMixin
 from app.helpers.database import get_period_filter_lookup
 from app.helpers.utils import get_queryset_by_user
 from app.permissions import UserObjectsPermissions
+from authentication.utils import get_current_user
 
 from ..models import CashCheck
 from ..models import Position
@@ -91,16 +92,26 @@ class CashCheckDetailView(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixi
 
 
 class PositionListView(ListModelMixin, GenericAPIView):
-    """Все позии по чекам"""
+    """
+    Все позии по чекам
+
+
+    sort by: name, cash_check__date, price
+    """
 
     serializer_class = PositionListSerializer
 
     def get_queryset(self):
         queryset = get_queryset_by_user(Position, self.request)
 
-        repair_object = self.request.query_params.get("repair_object")
-        if repair_object:
-            queryset = queryset.filter(cash_check__repair_object=repair_object)
+        page_size = self.request.query_params.get("page_size")
+        if page_size:
+            self.pagination_class.page_size = int(page_size)
+
+        # Отдаем позиции только для текущего объекта
+        user = get_current_user(self.request)
+        if user and user.settings and user.settings.current_repair_object is not None:
+            queryset = queryset.filter(cash_check__repair_object=user.settings.current_repair_object)
         else:
             queryset = queryset.none()
 
@@ -125,6 +136,17 @@ class PositionListView(ListModelMixin, GenericAPIView):
         category = self.request.query_params.get("category")
         if category:
             queryset = queryset.filter(category=category)
+
+        # Сортировка
+        sort_field = self.request.query_params.get("sortField")
+        sort_order = self.request.query_params.get("sortOrder")
+        if sort_field and sort_order:
+            sort_order = "-" if sort_order == "desc" else ""
+
+            if sort_field == "date":
+                sort_field = "cash_check__date"
+
+            queryset = queryset.order_by(f"{sort_order}{sort_field}", "pk")
 
         return queryset
 

@@ -1,3 +1,4 @@
+import math
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.utils.urls import remove_query_param
@@ -44,6 +45,7 @@ class BasePagination(PageNumberPagination):
                 },
                 "count": self.page.paginator.count,
                 "page_size": self.page_size,
+                "page_count":  math.ceil(self.page.paginator.count / self.page_size),
                 "results": data,
             }
         )
