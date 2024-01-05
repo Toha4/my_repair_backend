@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 from app.serializers import SERIALIZER_DATE_PARAMS
 from app.serializers import CurrentUserDefault
+from homes.models import RepairObject
 
 from ..models import CashCheck
 from ..models import Position
@@ -11,14 +12,14 @@ from ..models import Position
 
 class PositionSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=CurrentUserDefault())
-    cahs_check = serializers.PrimaryKeyRelatedField(queryset=CashCheck.objects.all(), write_only=True, required=False)
+    cash_check = serializers.PrimaryKeyRelatedField(queryset=CashCheck.objects.all(), write_only=True, required=False)
 
     class Meta:
         model = Position
         fields = (
             "pk",
             "user",
-            "cahs_check",
+            "cash_check",
             "name",
             "room",
             "category",
@@ -38,9 +39,10 @@ class PositionFullSerializer(PositionSerializer):
         fields = PositionSerializer.Meta.fields + ("room_name", "category_name")
 
     def get_room_name(self, obj):
-        if obj.room:
-            return obj.room.name
-        return ""
+        if obj.cash_check.repair_object.type_object == RepairObject.LAND and obj.room.building:
+            return f"{obj.room.building.name} - {obj.room.name}"
+        
+        return obj.room.name
 
     def get_category_name(self, obj):
         if obj.category:
@@ -49,13 +51,14 @@ class PositionFullSerializer(PositionSerializer):
 
 
 class PositionListSerializer(PositionFullSerializer):
-    cahs_check = serializers.PrimaryKeyRelatedField(read_only=True)
+    cash_check = serializers.PrimaryKeyRelatedField(queryset=CashCheck.objects.all())
     shop = serializers.SerializerMethodField()
     shop_name = serializers.SerializerMethodField()
     date = serializers.SerializerMethodField()
+    room_name = serializers.SerializerMethodField()
 
-    class Meta(PositionSerializer.Meta):
-        fields = PositionSerializer.Meta.fields + ("shop", "shop_name", "date")
+    class Meta(PositionFullSerializer.Meta):
+        fields = PositionFullSerializer.Meta.fields + ("shop", "shop_name", "date")
 
     def get_shop(self, obj):
         if obj.cash_check.shop:
