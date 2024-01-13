@@ -1,5 +1,6 @@
 from django.db.transaction import atomic
 
+from drf_writable_nested.serializers import WritableNestedModelSerializer
 from rest_framework import serializers
 
 from app.serializers import SERIALIZER_DATE_PARAMS
@@ -12,14 +13,12 @@ from ..models import Position
 
 class PositionSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=CurrentUserDefault())
-    cash_check = serializers.PrimaryKeyRelatedField(queryset=CashCheck.objects.all(), write_only=True, required=False)
 
     class Meta:
         model = Position
         fields = (
             "pk",
             "user",
-            "cash_check",
             "name",
             "room",
             "category",
@@ -58,7 +57,7 @@ class PositionListSerializer(PositionFullSerializer):
     room_name = serializers.SerializerMethodField()
 
     class Meta(PositionFullSerializer.Meta):
-        fields = PositionFullSerializer.Meta.fields + ("shop", "shop_name", "date")
+        fields = PositionFullSerializer.Meta.fields + ("cash_check", "shop", "shop_name", "date")
 
     def get_shop(self, obj):
         if obj.cash_check.shop:
@@ -76,17 +75,22 @@ class PositionListSerializer(PositionFullSerializer):
         return None
 
 
-class CashCheckSerializer(serializers.ModelSerializer):
+class PositionNestedSerializer(PositionSerializer):
+    
+    class Meta(PositionSerializer.Meta):
+       ordering = ['-pk']
+
+
+class CashCheckSerializer(WritableNestedModelSerializer):
     user = serializers.HiddenField(default=CurrentUserDefault())
     date = serializers.DateField(**SERIALIZER_DATE_PARAMS)
-    positions = PositionSerializer(many=True)
+    positions = PositionNestedSerializer(many=True)
 
     class Meta:
         model = CashCheck
         fields = (
             "pk",
             "user",
-            "repair_object",
             "date",
             "shop",
             "positions",
@@ -95,15 +99,11 @@ class CashCheckSerializer(serializers.ModelSerializer):
     def validate(self, data):
         errors = {}
         positions = data.get("positions")
-        repair_object = data.get("repair_object")
 
         if self.instance and self.instance.user:
             user = self.instance.user
         else:
             user = data.get("user")
-
-        if repair_object.user != user:
-            errors["repair_object"] = "Объект ремонта принадлежит другому пользователю."
 
         error_positions = []
         for position in positions:
@@ -111,11 +111,11 @@ class CashCheckSerializer(serializers.ModelSerializer):
 
             room = position.get("room")
             if room.user != user:
-                error_position["room"] = "Комната принадлежит другому пользователю."
+                error_position["room"] = "Комната не найдена."
 
             category = position.get("category")
             if category.user != user:
-                error_position["category"] = "Категория принадлежит другому пользователю."
+                error_position["category"] = "Категория не найдена."
 
             if error_position:
                 error_positions.append(error_position)
@@ -128,30 +128,6 @@ class CashCheckSerializer(serializers.ModelSerializer):
 
         return data
 
-    @atomic
-    def create(self, validated_data):
-        positions = validated_data.pop("positions")
-        cash_check = self.Meta.model.objects.create(**validated_data)
-        for position in positions:
-            cash_check.positions.create(**position)
-
-        return cash_check
-
-    @atomic
-    def update(self, instance, validated_data):
-        positions = validated_data.pop("positions")
-
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-
-        instance.save()
-
-        instance.positions.all().delete()
-        for position in positions:
-            position["user"] = instance.user
-            instance.positions.create(**position)
-
-        return instance
 
 
 class CashCheckFullSerializer(CashCheckSerializer):
