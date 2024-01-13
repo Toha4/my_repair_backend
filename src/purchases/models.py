@@ -19,6 +19,10 @@ class CashCheck(models.Model):
         verbose_name_plural = "Чеки"
         ordering = ("-date", "-pk")
 
+    def save(self, *args, **kwargs):
+        self.repair_object = self.user.settings.current_repair_object
+        super(CashCheck, self).save(*args, **kwargs)
+
 
 class Position(models.Model):
     user = models.ForeignKey(
@@ -48,4 +52,4 @@ class Position(models.Model):
         verbose_name = "Позиция чека"
         verbose_name_plural = "Позиции чека"
         unique_together = ("cash_check", "name")
-        ordering = ("cash_check", "-pk")
+        ordering = ("cash_check", "pk")

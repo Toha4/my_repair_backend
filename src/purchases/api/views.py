@@ -147,6 +147,8 @@ class PositionListView(ListModelMixin, GenericAPIView):
                 sort_field = "cash_check__date"
 
             queryset = queryset.order_by(f"{sort_order}{sort_field}", "pk")
+        else:
+            queryset = queryset.order_by('-cash_check__date', '-pk')
 
         return queryset
 
