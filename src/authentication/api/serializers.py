@@ -29,7 +29,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(min_length=5, write_only=True)
     is_superuser = serializers.BooleanField(read_only=True)
     is_active = serializers.BooleanField(read_only=True)
-    settings = UserSettingsSerializer()
+    settings = UserSettingsSerializer(read_only=True)
 
     class Meta:
         model = CustomUser
