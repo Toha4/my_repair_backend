@@ -26,7 +26,7 @@ class PositionSerializer(serializers.ModelSerializer):
             "note",
             "price",
             "quantity",
-            "is_service",
+            "type",
         )
 
 

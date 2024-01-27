@@ -1,5 +1,7 @@
 from django.db import models
 
+from .enums import PositionTypeChose
+
 
 class CashCheck(models.Model):
     user = models.ForeignKey(
@@ -43,7 +45,9 @@ class Position(models.Model):
     note = models.TextField(verbose_name="Примечание", blank=True)
     price = models.DecimalField(verbose_name="Цена", max_digits=18, decimal_places=2)
     quantity = models.IntegerField(verbose_name="Количество")
-    is_service = models.BooleanField(verbose_name="Услуга", default=False)
+    type = models.PositiveSmallIntegerField(
+        verbose_name="Тип расходов", choices=PositionTypeChose.choices, default=PositionTypeChose.PURCHASE
+    )
 
     def __str__(self) -> str:
         return f"{self.name} X {self.quantity} {self.price} руб."
