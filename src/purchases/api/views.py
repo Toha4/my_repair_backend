@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from django.db.models import Q
 
 from rest_framework.generics import GenericAPIView
 from rest_framework.mixins import CreateModelMixin
@@ -11,6 +12,7 @@ from app.helpers.database import get_period_filter_lookup
 from app.helpers.utils import get_queryset_by_user
 from app.permissions import UserObjectsPermissions
 from authentication.utils import get_current_user
+from homes.models import RepairObject
 
 from ..models import CashCheck
 from ..models import Position
@@ -95,7 +97,8 @@ class PositionListView(ListModelMixin, GenericAPIView):
     """
     Все позии по чекам
 
-
+    general_search: name, note
+    filter: shop[], date_begin, date_end, room[], category[]
     sort by: name, cash_check__date, price
     """
 
@@ -115,27 +118,36 @@ class PositionListView(ListModelMixin, GenericAPIView):
         else:
             queryset = queryset.none()
 
-        shop = self.request.query_params.get("shop")
-        if shop:
-            queryset = queryset.filter(cash_check__shop=shop)
+        general_search = self.request.query_params.get("general_search")
+        if general_search:
+            queryset = queryset.filter(
+                Q(name__icontains=general_search.lower()) | Q(note__icontains=general_search.lower())
+            )
 
         date_begin = self.request.query_params.get("date_begin")
         date_end = self.request.query_params.get("date_end")
         if date_begin or date_end:
             queryset = queryset.filter(get_period_filter_lookup("cash_check__date", date_begin, date_end))
 
-        name = self.request.query_params.get("name")
-        if name:
-            # TODO: Lower не работает в SQLLITE. Проверить после перехода на другую БД.
-            queryset = queryset.filter(name__icontains=name.lower())
+        shops = self.request.query_params.get("shops")
+        if shops:
+            queryset = queryset.filter(cash_check__shop__in=[int(shop) for shop in shops.split(",")])
 
-        room = self.request.query_params.get("room")
-        if room:
-            queryset = queryset.filter(room=room)
+        rooms = self.request.query_params.get("rooms")
+        if rooms:
+            queryset = queryset.filter(room__in=[int(room) for room in rooms.split(",")])
 
-        category = self.request.query_params.get("category")
-        if category:
-            queryset = queryset.filter(category=category)
+        buildings = self.request.query_params.get("buildings")
+        if buildings and user.settings.current_repair_object.type_object == RepairObject.LAND:
+            queryset = queryset.filter(room__building__in=[int(building) for building in buildings.split(",")])
+
+        categories = self.request.query_params.get("categories")
+        if categories:
+            queryset = queryset.filter(category__in=[int(category) for category in categories.split(",")])
+
+        position_types = self.request.query_params.get("position_types")
+        if position_types:
+            queryset = queryset.filter(type__in=[int(position_type) for position_type in position_types.split(",")])
 
         # Сортировка
         sort_field = self.request.query_params.get("sortField")
