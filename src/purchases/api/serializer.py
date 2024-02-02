@@ -1,5 +1,3 @@
-from django.db.transaction import atomic
-
 from drf_writable_nested.serializers import WritableNestedModelSerializer
 from rest_framework import serializers
 
@@ -40,7 +38,6 @@ class PositionFullSerializer(PositionSerializer):
     def get_room_name(self, obj):
         if obj.cash_check.repair_object.type_object == RepairObject.LAND and obj.room.building:
             return f"{obj.room.building.name} - {obj.room.name}"
-        
         return obj.room.name
 
     def get_category_name(self, obj):
@@ -76,9 +73,9 @@ class PositionListSerializer(PositionFullSerializer):
 
 
 class PositionNestedSerializer(PositionSerializer):
-    
+
     class Meta(PositionSerializer.Meta):
-       ordering = ['-pk']
+        ordering = ['-pk']
 
 
 class CashCheckSerializer(WritableNestedModelSerializer):
@@ -127,7 +124,6 @@ class CashCheckSerializer(WritableNestedModelSerializer):
             raise serializers.ValidationError(errors)
 
         return data
-
 
 
 class CashCheckFullSerializer(CashCheckSerializer):
