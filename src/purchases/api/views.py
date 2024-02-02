@@ -1,5 +1,8 @@
-from django.shortcuts import get_object_or_404
+from django.db.models import Count
+from django.db.models import F
 from django.db.models import Q
+from django.db.models import Sum
+from django.shortcuts import get_object_or_404
 
 from rest_framework.generics import GenericAPIView
 from rest_framework.mixins import CreateModelMixin
@@ -7,6 +10,7 @@ from rest_framework.mixins import DestroyModelMixin
 from rest_framework.mixins import ListModelMixin
 from rest_framework.mixins import RetrieveModelMixin
 from rest_framework.mixins import UpdateModelMixin
+from rest_framework.response import Response
 
 from app.helpers.database import get_period_filter_lookup
 from app.helpers.utils import get_queryset_by_user
@@ -160,9 +164,28 @@ class PositionListView(ListModelMixin, GenericAPIView):
 
             queryset = queryset.order_by(f"{sort_order}{sort_field}", "pk")
         else:
-            queryset = queryset.order_by('-cash_check__date', '-pk')
+            queryset = queryset.order_by("-cash_check__date", "-pk")
 
         return queryset
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
+
+    def get_paginated_response(self, data, **kwargs):
+        assert self.paginator is not None
+        return self.paginator.get_paginated_response(data, **kwargs)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        totals = queryset.annotate(amount=F("price") * F("quantity")).aggregate(
+            total_number=Count("pk"), total_amount=Sum("amount")
+        )
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data, totals=totals)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({"results": serializer.data, "totals": totals})

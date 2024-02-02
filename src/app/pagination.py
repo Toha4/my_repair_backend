@@ -1,4 +1,5 @@
 import math
+
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.utils.urls import remove_query_param
@@ -34,7 +35,7 @@ class BasePagination(PageNumberPagination):
 
         return self.page.previous_page_number()
 
-    def get_paginated_response(self, data):
+    def get_paginated_response(self, data, **kwargs):
         return Response(
             {
                 "links": {"next": self.get_next_link(), "previous": self.get_previous_link()},
@@ -45,7 +46,8 @@ class BasePagination(PageNumberPagination):
                 },
                 "count": self.page.paginator.count,
                 "page_size": self.page_size,
-                "page_count":  math.ceil(self.page.paginator.count / self.page_size),
+                "page_count": math.ceil(self.page.paginator.count / self.page_size),
                 "results": data,
+                **kwargs,
             }
         )

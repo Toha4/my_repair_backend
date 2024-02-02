@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class PositionTypeChose(models.IntegerChoices):
     """ Тип покупки """
 
