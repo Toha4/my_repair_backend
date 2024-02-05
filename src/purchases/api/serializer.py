@@ -46,15 +46,36 @@ class PositionFullSerializer(PositionSerializer):
         return ""
 
 
+class PositionUpdateSerializer(PositionFullSerializer):
+    check_date = serializers.SerializerMethodField()
+    check_number = serializers.SerializerMethodField()
+    shop_name = serializers.SerializerMethodField()
+
+    class Meta(PositionSerializer.Meta):
+        fields = PositionSerializer.Meta.fields + ("check_date", "check_number", "shop_name")
+
+    def get_check_date(self, obj: Position):
+        return obj.cash_check.date.strftime("%d.%m.%Y")
+
+    def get_check_number(self, obj: Position):
+        # TODO: Пока номер чека это id, в дальнейшем пранирую переделать
+        return obj.cash_check.id
+
+    def get_shop_name(self, obj):
+        if obj.cash_check.shop:
+            return obj.cash_check.shop.name
+        return None
+
+
 class PositionListSerializer(PositionFullSerializer):
-    cash_check = serializers.PrimaryKeyRelatedField(queryset=CashCheck.objects.all())
+    cash_check_id = serializers.IntegerField(source="cash_check.id", read_only=True)
     shop = serializers.SerializerMethodField()
     shop_name = serializers.SerializerMethodField()
-    date = serializers.SerializerMethodField()
+    cash_check_date = serializers.SerializerMethodField()
     room_name = serializers.SerializerMethodField()
 
     class Meta(PositionFullSerializer.Meta):
-        fields = PositionFullSerializer.Meta.fields + ("cash_check", "shop", "shop_name", "date")
+        fields = PositionFullSerializer.Meta.fields + ("cash_check_id", "shop", "shop_name", "cash_check_date")
 
     def get_shop(self, obj):
         if obj.cash_check.shop:
@@ -66,16 +87,15 @@ class PositionListSerializer(PositionFullSerializer):
             return obj.cash_check.shop.name
         return None
 
-    def get_date(self, obj):
+    def get_cash_check_date(self, obj):
         if obj.cash_check.date:
             return obj.cash_check.date.strftime("%d.%m.%Y")
         return None
 
 
 class PositionNestedSerializer(PositionSerializer):
-
     class Meta(PositionSerializer.Meta):
-        ordering = ['-pk']
+        ordering = ["-pk"]
 
 
 class CashCheckSerializer(WritableNestedModelSerializer):

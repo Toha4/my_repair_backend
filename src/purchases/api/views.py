@@ -189,3 +189,21 @@ class PositionListView(ListModelMixin, GenericAPIView):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response({"results": serializer.data, "totals": totals})
+
+
+class PositionDetailView(UpdateModelMixin, GenericAPIView):
+    """Позиция чека"""
+
+    permission_classes = [UserObjectsPermissions]
+    queryset = Position.objects.all()
+    serializer_class = PositionListSerializer
+
+    def get_object(self):
+        pk = self.kwargs.pop("pk")
+        queryset = self.filter_queryset(self.get_queryset())
+        obj = get_object_or_404(queryset, pk=pk)
+        self.check_object_permissions(self.request, obj)
+        return obj
+
+    def put(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
