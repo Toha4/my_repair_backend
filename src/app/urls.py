@@ -10,5 +10,5 @@ urlpatterns = [
     path("api/", include("homes.urls")),
     path("api/", include("shops.urls")),
     path("api/", include("purchases.urls")),
-    path("api/", include("integrations.get_receipts.urls"))
+    path("api/", include("integrations.proverka_cheka.urls")),
 ]

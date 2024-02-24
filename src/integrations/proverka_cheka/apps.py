@@ -1,7 +1,7 @@
 from django.apps import AppConfig
 
 
-class GetReceiptsConfig(AppConfig):
+class ProverkaChekaConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "integrations.get_receipts"
+    name = "integrations.proverka_cheka"
     verbose_name = "Интеграция для получения данных чеков"

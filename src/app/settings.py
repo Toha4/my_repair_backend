@@ -34,7 +34,7 @@ INSTALLED_APPS = [
     "homes",
     "shops",
     "purchases",
-    "integrations.get_receipts",
+    "integrations.proverka_cheka",
 
     "django.contrib.admin",
     "django.contrib.auth",
@@ -196,5 +196,3 @@ CORS_ORIGIN_ALLOW_ALL = env("CORS_ORIGIN_ALLOW_ALL", cast=bool, default=False)
 CORS_ALLOW_CREDENTIALS = env("CORS_ALLOW_CREDENTIALS", cast=bool, default=True)
 CORS_ORIGIN_WHITELIST = env("CORS_ORIGIN_WHITELIST", cast=str, default="http://localhost:3000").split(", ")
 
-# TODO: ВРЕМЕННО Api ключ сервиса по проверки чека https://proverkacheka.com 
-PROVERKA_CHEKA_API_KEY = env("PROVERKA_CHEKA_API_KEY", cast=str, default='')

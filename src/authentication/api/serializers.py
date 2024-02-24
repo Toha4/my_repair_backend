@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from integrations.proverka_cheka.models import ProverkaChekaIntegration
+
 from ..models import CustomUser
 from ..models import UserSettings
 
@@ -7,10 +9,16 @@ from ..models import UserSettings
 class UserSettingsSerializer(serializers.ModelSerializer):
     current_repair_object_type = serializers.SerializerMethodField()
     current_repair_object_name = serializers.SerializerMethodField()
+    is_proverka_cheka_integration = serializers.SerializerMethodField()
 
     class Meta:
         model = UserSettings
-        fields = ("current_repair_object", "current_repair_object_type", "current_repair_object_name")
+        fields = (
+            "current_repair_object",
+            "current_repair_object_type",
+            "current_repair_object_name",
+            "is_proverka_cheka_integration",
+        )
 
     def get_current_repair_object_type(self, obj):
         if obj.current_repair_object:
@@ -21,6 +29,15 @@ class UserSettingsSerializer(serializers.ModelSerializer):
         if obj.current_repair_object:
             return obj.current_repair_object.name
         return None
+
+    def get_is_proverka_cheka_integration(self, obj):
+        proverka_checa_integration = (
+            ProverkaChekaIntegration.objects.filter(user=obj.user).values("is_enabled").first()
+        )
+
+        if proverka_checa_integration and proverka_checa_integration.get("is_enabled"):
+            return True
+        return False
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
