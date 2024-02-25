@@ -44,6 +44,8 @@ class Position(models.Model):
     link = models.TextField(verbose_name="Ссылка на сайт", blank=True)
     note = models.TextField(verbose_name="Примечание", blank=True)
     price = models.DecimalField(verbose_name="Цена", max_digits=18, decimal_places=2)
+    
+    # TODO: quantity может быть дробным числом. См. интеграцию проверка чеков
     quantity = models.IntegerField(verbose_name="Количество")
     type = models.PositiveSmallIntegerField(
         verbose_name="Тип расходов", choices=PositionTypeChose.choices, default=PositionTypeChose.PURCHASE
