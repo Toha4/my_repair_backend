@@ -26,6 +26,9 @@ DEBUG = env("DEBUG", cast=bool, default=True)
 ALLOWED_HOSTS = env("ALLOWED_HOSTS", cast=str, default="localhost, 127.0.0.1").split(", ")
 
 
+csrf_trusted_origins_env = env("CSRF_TRUSTED_ORIGINS", cast=str, default=None)
+CSRF_TRUSTED_ORIGINS = csrf_trusted_origins_env.split(", ") if csrf_trusted_origins_env else []
+
 # Application definition
 
 INSTALLED_APPS = [
