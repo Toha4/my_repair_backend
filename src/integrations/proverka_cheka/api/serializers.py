@@ -43,6 +43,7 @@ class ReceiptScanningDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReceiptScanning
         fields = (
+            "pk",
             "user",
             "created",
             "qr_raw",
@@ -76,6 +77,7 @@ class ReceiptScanningDetailSerializer(serializers.ModelSerializer):
 
 class ReceiptScanningListSerializer(serializers.ModelSerializer):
     created = serializers.DateTimeField(**SERIALIZER_DATETIME_PARAMS)
+    organization = serializers.SerializerMethodField()
     date = serializers.DateTimeField(**SERIALIZER_DATETIME_PARAMS)
     is_added_check = serializers.SerializerMethodField()
     shop_pk = serializers.SerializerMethodField()
@@ -91,9 +93,17 @@ class ReceiptScanningListSerializer(serializers.ModelSerializer):
             "date",
             "request_number",
             "operator",
+            "total_sum",
             "is_added_check",
             "shop_pk",
         )
+
+    def get_organization(self, obj: ReceiptScanning):
+        shop_name = Shop.objects.filter(inn=obj.organization_inn).values_list("name", flat=True).first()
+        if shop_name:
+            return shop_name
+    
+        return obj.organization
 
     def get_is_added_check(self, obj: ReceiptScanning):
         # TODO: Реализовать получение значения после связывания c чеком
