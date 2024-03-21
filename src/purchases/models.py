@@ -12,6 +12,13 @@ class CashCheck(models.Model):
     shop = models.ForeignKey(
         "shops.Shop", verbose_name="Магазин", on_delete=models.PROTECT, related_name="cash_checks"
     )
+    receipt_scanning = models.OneToOneField(
+        "proverka_cheka.ReceiptScanning",
+        verbose_name="Сканированный чек",
+        related_name="cash_check",
+        on_delete=models.PROTECT,
+        null=True
+    )
 
     def __str__(self) -> str:
         return f"{self.shop} {self.date}"

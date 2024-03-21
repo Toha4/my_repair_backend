@@ -39,6 +39,7 @@ class ReceiptScanningDetailSerializer(serializers.ModelSerializer):
     date = serializers.DateTimeField(**SERIALIZER_DATETIME_PARAMS)
     items = ReceiptItemSerializer(many=True)
     shop_pk = serializers.SerializerMethodField()
+    shop_name = serializers.SerializerMethodField()
 
     class Meta:
         model = ReceiptScanning
@@ -56,6 +57,7 @@ class ReceiptScanningDetailSerializer(serializers.ModelSerializer):
             "total_sum",
             "html",
             "shop_pk",
+            "shop_name",
             "items",
         )
 
@@ -73,6 +75,12 @@ class ReceiptScanningDetailSerializer(serializers.ModelSerializer):
     def get_shop_pk(self, obj: ReceiptScanning):
         # Поиск магазина из справочника по ИНН
         return Shop.objects.filter(inn=obj.organization_inn).values_list("id", flat=True).first()
+    
+    def get_shop_name(self, obj: ReceiptScanning):
+        # Поиск магазина из справочника по ИНН
+        shop_name = Shop.objects.filter(inn=obj.organization_inn).values_list("name", flat=True).first()
+
+        return shop_name
 
 
 class ReceiptScanningListSerializer(serializers.ModelSerializer):
@@ -106,9 +114,13 @@ class ReceiptScanningListSerializer(serializers.ModelSerializer):
         return obj.organization
 
     def get_is_added_check(self, obj: ReceiptScanning):
-        # TODO: Реализовать получение значения после связывания c чеком
+        cash_check = obj.cash_check if hasattr(obj, "cash_check") else None
+
+        if cash_check is not None:
+            return True
         return False
 
     def get_shop_pk(self, obj: ReceiptScanning):
         # Поиск магазина из справочника по ИНН
+        # TODO: Оптимизировать запрос, получить магазин в queryset
         return Shop.objects.filter(inn=obj.organization_inn).values_list("id", flat=True).first()
