@@ -110,6 +110,7 @@ class CashCheckSerializer(WritableNestedModelSerializer):
             "user",
             "date",
             "shop",
+            "receipt_scanning",
             "positions",
         )
 
