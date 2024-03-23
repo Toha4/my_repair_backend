@@ -107,8 +107,10 @@ class ReceiptScanningListView(ListModelMixin, GenericAPIView):
 
         is_added_check = self.request.query_params.get("is_added_check")
         if is_added_check:
-            # TODO: Добавить фильтр по добавленному чеку
-            pass
+            if is_added_check == "true":
+                queryset = queryset.filter(cash_check__isnull=False)
+            elif is_added_check == "false":
+                queryset = queryset.filter(cash_check__isnull=True)
 
         return queryset
 
