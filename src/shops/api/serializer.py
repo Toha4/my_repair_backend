@@ -15,4 +15,6 @@ class ShopSerializer(serializers.ModelSerializer):
             "user",
             "name",
             "link",
+            "inn",
+            "description",
         )

@@ -8,6 +8,7 @@ class Shop(models.Model):
     name = models.CharField(verbose_name="Наименование", max_length=128)
     link = models.CharField(verbose_name="Ссылка на сайт", max_length=128, blank=True)
     inn = models.CharField(verbose_name="ИНН", max_length=12, null=True, blank=True)
+    description = models.TextField(verbose_name="Описание", blank=True)
 
     def __str__(self) -> str:
         return self.name
