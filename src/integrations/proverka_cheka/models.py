@@ -30,8 +30,8 @@ class ReceiptScanning(TimestampModel):
     retail_place_addres = models.CharField(verbose_name="Адрес", max_length=256, null=True)
     organization_inn = models.CharField(verbose_name="ИНН организации", max_length=12)
     date = models.DateTimeField(verbose_name="Дата и время", null=True)
-    request_number = models.IntegerField(verbose_name="Чек: №", null=True)
-    operator = models.CharField(verbose_name="Кассир", max_length=256, null=True)
+    request_number = models.IntegerField(verbose_name="Чек: №", null=True, blank=True)
+    operator = models.CharField(verbose_name="Кассир", max_length=256, null=True, blank=True)
     total_sum = models.DecimalField(verbose_name="Итого", max_digits=18, decimal_places=2)
     html = models.TextField(verbose_name="html представление чека")
 
