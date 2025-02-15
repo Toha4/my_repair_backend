@@ -4,7 +4,7 @@ certifi==2024.2.2
 charset-normalizer==3.3.2
 click==8.0.3
 colorama==0.4.4
-Django==4.2.6
+Django==4.2.18
 django-cors-headers==3.13.0
 django-environ==0.8.1
 django-nested-admin==4.0.2
