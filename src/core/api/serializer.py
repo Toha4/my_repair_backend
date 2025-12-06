@@ -15,3 +15,11 @@ class CategorySerializer(serializers.ModelSerializer):
             "user",
             "name",
         )
+
+class CategoryListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = (
+            "pk",
+            "name",
+        )

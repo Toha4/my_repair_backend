@@ -62,7 +62,7 @@ class CashCheckListView(ListModelMixin, CreateModelMixin, GenericAPIView):
 
         category = self.request.query_params.get("category")
         if category:
-            queryset = queryset.filter(positions__category=category)
+            queryset = queryset.filter(positions__categories=category)
 
         return queryset
 
@@ -102,7 +102,7 @@ class PositionListView(ListModelMixin, GenericAPIView):
     Все позии по чекам
 
     general_search: name, note
-    filter: shop[], date_begin, date_end, room[], category[]
+    filter: shop[], date_begin, date_end, room[], categories[]
     sort by: name, cash_check__date, price
     """
 
@@ -135,23 +135,63 @@ class PositionListView(ListModelMixin, GenericAPIView):
 
         shops = self.request.query_params.get("shops")
         if shops:
-            queryset = queryset.filter(cash_check__shop__in=[int(shop) for shop in shops.split(",")])
+            shop_ids = []
+            for shop in shops.split(","):
+                try:
+                    shop_id = int(shop)
+                    shop_ids.append(shop_id)
+                except ValueError:
+                    continue
+            if shop_ids:
+                queryset = queryset.filter(cash_check__shop__in=shop_ids)
 
         rooms = self.request.query_params.get("rooms")
         if rooms:
-            queryset = queryset.filter(room__in=[int(room) for room in rooms.split(",")])
+            room_ids = []
+            for room in rooms.split(","):
+                try:
+                    room_id = int(room)
+                    room_ids.append(room_id)
+                except ValueError:
+                    continue
+            if room_ids:
+                queryset = queryset.filter(room__in=room_ids)
 
         buildings = self.request.query_params.get("buildings")
         if buildings and user.settings.current_repair_object.type_object == RepairObject.LAND:
-            queryset = queryset.filter(room__building__in=[int(building) for building in buildings.split(",")])
+            building_ids = []
+            for building in buildings.split(","):
+                try:
+                    building_id = int(building)
+                    building_ids.append(building_id)
+                except ValueError:
+                    continue
+            if building_ids:
+                queryset = queryset.filter(room__building__in=building_ids)
 
         categories = self.request.query_params.get("categories")
         if categories:
-            queryset = queryset.filter(category__in=[int(category) for category in categories.split(",")])
+            category_ids = []
+            for category in categories.split(","):
+                try:
+                    category_id = int(category)
+                    category_ids.append(category_id)
+                except ValueError:
+                    continue
+            if category_ids:
+                queryset = queryset.filter(categories__in=category_ids).distinct()
 
         position_types = self.request.query_params.get("position_types")
         if position_types:
-            queryset = queryset.filter(type__in=[int(position_type) for position_type in position_types.split(",")])
+            position_type_ids = []
+            for position_type in position_types.split(","):
+                try:
+                    position_type_id = int(position_type)
+                    position_type_ids.append(position_type_id)
+                except ValueError:
+                    continue
+            if position_type_ids:
+                queryset = queryset.filter(type__in=position_type_ids)
 
         # Сортировка
         sort_field = self.request.query_params.get("sortField")
@@ -196,7 +236,13 @@ class PositionDetailView(UpdateModelMixin, GenericAPIView):
 
     permission_classes = [UserObjectsPermissions]
     queryset = Position.objects.all()
-    serializer_class = PositionListSerializer
+
+    def get_serializer_class(self):
+        if self.request.method in ["PUT", "PATCH"]:
+            from .serializer import PositionUpdateSerializer
+            return PositionUpdateSerializer
+        from .serializer import PositionListSerializer
+        return PositionListSerializer
 
     def get_object(self):
         pk = self.kwargs.pop("pk")
@@ -204,6 +250,23 @@ class PositionDetailView(UpdateModelMixin, GenericAPIView):
         obj = get_object_or_404(queryset, pk=pk)
         self.check_object_permissions(self.request, obj)
         return obj
+
+    def partial_update(self, request, *args, **kwargs):
+        """Обновление позиции с возвратом полных данных"""
+        from .serializer import PositionUpdateSerializer, PositionListSerializer
+        from rest_framework.response import Response
+        
+        instance = self.get_object()
+        serializer = PositionUpdateSerializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        # Возвращаем полные данные через PositionListSerializer для отображения в списке
+        if getattr(instance, '_prefetched_objects_cache', None):
+            instance._prefetched_objects_cache = {}
+
+        full_serializer = PositionListSerializer(instance)
+        return Response(full_serializer.data)
 
     def put(self, request, *args, **kwargs):
         return self.partial_update(request, *args, **kwargs)
