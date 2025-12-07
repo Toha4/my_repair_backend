@@ -1,4 +1,6 @@
+from django.db.models import OuterRef
 from django.db.models import Q
+from django.db.models import Subquery
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 
@@ -21,6 +23,7 @@ from integrations.proverka_cheka.api.serializers import ReceiptScanningListSeria
 from integrations.proverka_cheka.models import ProverkaChekaIntegration
 from integrations.proverka_cheka.models import ReceiptScanning
 from integrations.proverka_cheka.utils.proverka_cheka import ProverkaCheka
+from shops.models import Shop
 
 
 class ProverkaChekaIntegrationView(RetrieveModelMixin, UpdateModelMixin, GenericAPIView):
@@ -94,6 +97,25 @@ class ReceiptScanningListView(ListModelMixin, GenericAPIView):
 
     def get_queryset(self):
         queryset = get_queryset_by_user(ReceiptScanning, self.request)
+        # Оптимизация: загружаем связанный cash_check одним запросом
+        queryset = queryset.select_related('cash_check')
+        
+        # Оптимизация: получаем магазин по ИНН одним запросом через annotate
+        user = get_current_user(self.request)
+        shop_subquery = Shop.objects.filter(
+            user=user,
+            inn=OuterRef('organization_inn')
+        ).values('id')[:1]
+        
+        shop_name_subquery = Shop.objects.filter(
+            user=user,
+            inn=OuterRef('organization_inn')
+        ).values('name')[:1]
+        
+        queryset = queryset.annotate(
+            shop_pk=Subquery(shop_subquery),
+            shop_name=Subquery(shop_name_subquery)
+        )
 
         page_size = self.request.query_params.get("page_size")
         if page_size:
