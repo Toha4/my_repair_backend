@@ -45,9 +45,7 @@ class Position(models.Model):
     room = models.ForeignKey(
         "homes.Room", verbose_name="Комната", on_delete=models.PROTECT, related_name="cash_checks_positions"
     )
-    category = models.ForeignKey(
-        "core.Category", verbose_name="Категория", on_delete=models.PROTECT, related_name="cash_checks_positions"
-    )
+    categories = models.ManyToManyField( "core.Category", verbose_name="Категории", related_name="cash_checks_positions")
     link = models.TextField(verbose_name="Ссылка на сайт", blank=True)
     note = models.TextField(verbose_name="Примечание", blank=True)
     price = models.DecimalField(verbose_name="Цена", max_digits=18, decimal_places=2)

@@ -4,6 +4,7 @@ from rest_framework import serializers
 from app.serializers import SERIALIZER_DATE_PARAMS
 from app.serializers import CurrentUserDefault
 from homes.models import RepairObject
+from core.api.serializer import CategoryListSerializer
 
 from ..models import CashCheck
 from ..models import Position
@@ -19,7 +20,7 @@ class PositionSerializer(serializers.ModelSerializer):
             "user",
             "name",
             "room",
-            "category",
+            "categories",
             "link",
             "note",
             "price",
@@ -30,20 +31,14 @@ class PositionSerializer(serializers.ModelSerializer):
 
 class PositionFullSerializer(PositionSerializer):
     room_name = serializers.SerializerMethodField()
-    category_name = serializers.SerializerMethodField()
 
     class Meta(PositionSerializer.Meta):
-        fields = PositionSerializer.Meta.fields + ("room_name", "category_name")
+        fields = PositionSerializer.Meta.fields + ("room_name",)
 
     def get_room_name(self, obj):
         if obj.cash_check.repair_object.type_object == RepairObject.LAND and obj.room.building:
             return f"{obj.room.building.name} - {obj.room.name}"
         return obj.room.name
-
-    def get_category_name(self, obj):
-        if obj.category:
-            return obj.category.name
-        return ""
 
 
 class PositionUpdateSerializer(PositionFullSerializer):
@@ -53,6 +48,35 @@ class PositionUpdateSerializer(PositionFullSerializer):
 
     class Meta(PositionSerializer.Meta):
         fields = PositionSerializer.Meta.fields + ("check_date", "check_number", "shop_name")
+
+    def validate(self, data):
+        if not self.instance:
+            raise serializers.ValidationError("Instance is required for update.")
+
+        user = self.instance.user
+
+        room = data.get("room")
+        if room is not None:
+            # room может прийти как ID (число) или как объект
+            from homes.models import Room
+            if isinstance(room, int):
+                room_obj = Room.objects.filter(pk=room, user=user).first()
+                if not room_obj:
+                    raise serializers.ValidationError({"room": "Комната не найдена."})
+            elif hasattr(room, "user") and room.user != user:
+                raise serializers.ValidationError({"room": "Комната не найдена."})
+
+        categories = data.get("categories")
+        if categories is not None:
+            from core.models import Category
+            # categories приходят как массив ID (чисел)
+            category_ids = [cat if isinstance(cat, int) else (cat.pk if hasattr(cat, "pk") else cat) for cat in categories]
+            if category_ids:
+                user_categories = Category.objects.filter(user=user, pk__in=category_ids)
+                if user_categories.count() != len(category_ids):
+                    raise serializers.ValidationError({"categories": "Категория не найдена."})
+
+        return data
 
     def get_check_date(self, obj: Position):
         return obj.cash_check.date.strftime("%d.%m.%Y")
@@ -73,6 +97,7 @@ class PositionListSerializer(PositionFullSerializer):
     shop_name = serializers.SerializerMethodField()
     cash_check_date = serializers.SerializerMethodField()
     room_name = serializers.SerializerMethodField()
+    categories = CategoryListSerializer(many=True)
 
     class Meta(PositionFullSerializer.Meta):
         fields = PositionFullSerializer.Meta.fields + ("cash_check_id", "shop", "shop_name", "cash_check_date")
@@ -128,12 +153,18 @@ class CashCheckSerializer(WritableNestedModelSerializer):
             error_position = {}
 
             room = position.get("room")
-            if room.user != user:
+            if room and hasattr(room, "user") and room.user != user:
                 error_position["room"] = "Комната не найдена."
 
-            category = position.get("category")
-            if category.user != user:
-                error_position["category"] = "Категория не найдена."
+            categories = position.get("categories")
+            if categories:
+                from core.models import Category
+                # categories могут прийти как массив ID (чисел) или как объекты
+                category_ids = [cat if isinstance(cat, int) else (cat.pk if hasattr(cat, "pk") else cat) for cat in categories]
+                if category_ids:
+                    user_categories = Category.objects.filter(user=user, pk__in=category_ids)
+                    if user_categories.count() != len(category_ids):
+                        error_position["categories"] = "Категория не найдена."
 
             if error_position:
                 error_positions.append(error_position)
