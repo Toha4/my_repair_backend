@@ -82,8 +82,8 @@ class PositionUpdateSerializer(PositionFullSerializer):
         return obj.cash_check.date.strftime("%d.%m.%Y")
 
     def get_check_number(self, obj: Position):
-        # TODO: Пока номер чека это id, в дальнейшем пранирую переделать
-        return obj.cash_check.id
+        # Возвращаем порядковый номер чека
+        return obj.cash_check.sequence_number
 
     def get_shop_name(self, obj):
         if obj.cash_check.shop:
@@ -93,6 +93,7 @@ class PositionUpdateSerializer(PositionFullSerializer):
 
 class PositionListSerializer(PositionFullSerializer):
     cash_check_id = serializers.IntegerField(source="cash_check.id", read_only=True)
+    cash_check_sequence_number = serializers.IntegerField(source="cash_check.sequence_number", read_only=True)
     shop = serializers.SerializerMethodField()
     shop_name = serializers.SerializerMethodField()
     cash_check_date = serializers.SerializerMethodField()
@@ -100,7 +101,7 @@ class PositionListSerializer(PositionFullSerializer):
     categories = CategoryListSerializer(many=True)
 
     class Meta(PositionFullSerializer.Meta):
-        fields = PositionFullSerializer.Meta.fields + ("cash_check_id", "shop", "shop_name", "cash_check_date")
+        fields = PositionFullSerializer.Meta.fields + ("cash_check_id", "cash_check_sequence_number", "shop", "shop_name", "cash_check_date")
 
     def get_shop(self, obj):
         if obj.cash_check.shop:
@@ -137,7 +138,9 @@ class CashCheckSerializer(WritableNestedModelSerializer):
             "shop",
             "receipt_scanning",
             "positions",
+            "sequence_number",
         )
+        read_only_fields = ("sequence_number",)
 
     def validate(self, data):
         errors = {}

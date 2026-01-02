@@ -1,4 +1,5 @@
-from django.db import models
+from django.db import models, transaction
+from django.db.models import Max
 
 from .enums import PositionTypeChose
 
@@ -19,6 +20,11 @@ class CashCheck(models.Model):
         on_delete=models.PROTECT,
         null=True
     )
+    sequence_number = models.PositiveIntegerField(
+        verbose_name="Порядковый номер",
+        default=0,
+        help_text="Уникальный номер чека в рамках пользователя, присваивается автоматически."
+    )
 
     def __str__(self) -> str:
         return f"{self.shop} {self.date}"
@@ -27,10 +33,30 @@ class CashCheck(models.Model):
         verbose_name = "Чек"
         verbose_name_plural = "Чеки"
         ordering = ("-date", "-pk")
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'sequence_number'],
+                name='unique_user_sequence'
+            )
+        ]
 
     def save(self, *args, **kwargs):
-        self.repair_object = self.user.settings.current_repair_object
-        super(CashCheck, self).save(*args, **kwargs)
+        # При создании (когда нет pk) присваиваем порядковый номер
+        if not self.pk:
+            with transaction.atomic():
+                # Блокируем записи этого пользователя для безопасного вычисления
+                max_num = CashCheck.objects.filter(
+                    user=self.user
+                ).select_for_update().aggregate(Max('sequence_number'))['sequence_number__max']
+                if max_num is None:
+                    self.sequence_number = 1
+                else:
+                    self.sequence_number = max_num + 1
+                self.repair_object = self.user.settings.current_repair_object
+                super(CashCheck, self).save(*args, **kwargs)
+        else:
+            self.repair_object = self.user.settings.current_repair_object
+            super(CashCheck, self).save(*args, **kwargs)
 
 
 class Position(models.Model):
